@@ -6,6 +6,8 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from typing import Tuple, List
 from config.model_config import ModelConfig
+from sklearn.preprocessing import Normalizer
+
 
 class DataProcessor:
     def __init__(self, config: ModelConfig):
@@ -63,12 +65,19 @@ class DataProcessor:
         X = df.iloc[:, :-3]
         y_health = df.iloc[:, -3]  # OK/NG
         y_disease = df.iloc[:, -1]  # AD/PD/ASD/Control
+        # X = df.iloc[:, :-1]
+        # y_health = df.iloc[:, -1]  # OK/NG
+        # y_disease = df.iloc[:, -1]  # AD/PD/ASD/Control
         
         # 保存特征名称
         self.feature_names = X.columns.tolist()
         
-        # 标准化
-        X_scaled = self.scaler.fit_transform(X)
+        # # 标准化
+        # X_scaled = self.scaler.fit_transform(X)
+            
+        # 行归一化
+        normalizer = Normalizer(norm='l1')
+        X_normalized = normalizer.fit_transform(X)
         
         # 标签编码
         y_health_encoded = self.le_health.fit_transform(y_health)
@@ -78,7 +87,7 @@ class DataProcessor:
         print(f"Health status classes: {self.le_health.classes_}")
         print(f"Disease classes: {self.le_disease.classes_}")
         
-        return X_scaled, y_health_encoded, y_disease_encoded, self.feature_names
+        return X_normalized, y_health_encoded, y_disease_encoded, self.feature_names
 
     def split_data(self, X: np.ndarray, y_health: np.ndarray, 
                    y_disease: np.ndarray) -> Tuple:
@@ -104,7 +113,7 @@ class DataProcessor:
             X, y_health, y_disease,
             test_size=self.config.test_size,
             random_state=self.config.random_state,
-            stratify=y_disease  # 使用疾病标签进行分层采样
+            # stratify=y_disease  # 使用疾病标签进行分层采样
         )
     
     def get_label_encoders(self) -> Tuple[LabelEncoder, LabelEncoder]:
@@ -139,3 +148,20 @@ class DataProcessor:
             self.le_health.inverse_transform(y_health),
             self.le_disease.inverse_transform(y_disease)
         )
+    
+    def show_label_mappings(self):
+        """
+        显示标签编码的映射关系
+        """
+        health_mapping = dict(zip(self.le_health.classes_, range(len(self.le_health.classes_))))
+        disease_mapping = dict(zip(self.le_disease.classes_, range(len(self.le_disease.classes_))))
+        
+        print("Health Label Mapping:")
+        for label, index in health_mapping.items():
+            print(f"{label} -> {index}")
+        
+        print("\nDisease Label Mapping:")
+        for label, index in disease_mapping.items():
+            print(f"{label} -> {index}")
+        
+        return health_mapping, disease_mapping

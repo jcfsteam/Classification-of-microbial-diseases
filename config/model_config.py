@@ -13,14 +13,3 @@ class ModelConfig:
     max_depth: Optional[int] = None
     min_samples_split: int = 2
     min_samples_leaf: int = 1
-
-@dataclass
-class DiffusionConfig:
-    num_timesteps: int = 1000
-    beta_start: float = 1e-4
-    beta_end: float = 0.02
-    hidden_dim: int = 256
-    num_epochs: int = 100
-    batch_size: int = 64
-    learning_rate: float = 1e-4
-    augmentation_factor: float = 0.5
